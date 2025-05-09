@@ -11,6 +11,16 @@ class Condition {
 	}
 }
 
+class NotCondition extends Condition {
+	constructor(cond) {
+		super();
+		this.cond = cond;
+	}
+	toString() {
+		return `NOT (${this.cond.toString()})`; // 常に括弧つけるのが無難
+	}
+}
+
 class BinaryCondition extends Condition {
 	constructor(col, op, val) {
 		super();
@@ -177,6 +187,9 @@ const SQL = {
 	},
 	or(...conds) {
 		return new LogicCondition("OR", conds);
+	},
+	not(cond) {
+		return new NotCondition(cond);
 	},
 };
 
