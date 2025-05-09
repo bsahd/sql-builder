@@ -7,7 +7,7 @@ function sqlSpecialChars(val) {
 
 class Condition {
 	toString() {
-		throw new Error("not implemented");
+		throw new Error("実装してね");
 	}
 }
 
@@ -30,12 +30,7 @@ class LogicCondition extends Condition {
 		this.conds = conds;
 	}
 	toString() {
-		return this.conds
-			.map((c) => {
-				const needsParens = "conds" in c && this.op != c.op;
-				return needsParens ? `(${c.toString()})` : c.toString();
-			})
-			.join(` ${this.op} `);
+		return this.conds.map((c) => `(${c.toString()})`).join(` ${this.op} `);
 	}
 }
 
@@ -168,9 +163,6 @@ const SQL = {
 	eq(col, val) {
 		return new BinaryCondition(col, "=", val);
 	},
-	neq(col, val) {
-		return new BinaryCondition(col, "!=", val);
-	},
 	gte(col, val) {
 		return new BinaryCondition(col, ">=", val);
 	},
@@ -218,10 +210,5 @@ console.log(
 		.update("users")
 		.set("name", "jhon doe")
 		.set("age", 26)
-		.where(
-			SQL.and(
-				SQL.eq("name", "john' doe"),
-				SQL.and(SQL.eq("age", 25), SQL.neq("age", 26))
-			)
-		) + ";"
+		.where(SQL.and(SQL.eq("name", "john' doe"), SQL.eq("age", 25))) + ";"
 );
