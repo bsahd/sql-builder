@@ -196,6 +196,7 @@ const SQL = {
 		return new NotCondition(cond);
 	},
 };
+export default SQL;
 
 if (import.meta.filename === process.argv[1]) {
 	const db = new DatabaseSync(":memory:");
