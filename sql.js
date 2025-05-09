@@ -174,6 +174,9 @@ const SQL = {
 	eq(col, val) {
 		return new BinaryCondition(col, "=", val);
 	},
+	neq(col, val) {
+		return new BinaryCondition(col, "!=", val);
+	},
 	gte(col, val) {
 		return new BinaryCondition(col, ">=", val);
 	},
