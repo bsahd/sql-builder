@@ -2,12 +2,11 @@
 import SQL from "./index.js";
 import { DatabaseSync } from "node:sqlite";
 const dbsq = new DatabaseSync(":memory:");
-dbsq.exec("CREATE TABLE users(name VARCHAR, age INTEGER)");
-
 const db = new SQL(
 	(q) => dbsq.exec(q),
 	(q) => dbsq.prepare(q)
 );
+db.run("CREATE TABLE users(name VARCHAR, age INTEGER)");
 db.insert("users")
 	.values({ name: "john' doe", age: 25 })
 	.values({ name: "alice", age: 29 })
