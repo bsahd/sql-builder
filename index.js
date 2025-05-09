@@ -95,6 +95,10 @@ class InsertQuery extends Query {
 		super(table, executor);
 		this._rows = [];
 	}
+	/**
+	 * @param {{[x in string]:(string|boolean|number|null)}} vals
+	 * @returns
+	 */
 	values(vals) {
 		this._rows.push(vals);
 		return this;
