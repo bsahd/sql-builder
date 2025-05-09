@@ -1,4 +1,3 @@
-
 class Condition {
 	toString() {
 		throw new Error("実装してね");
@@ -26,6 +25,26 @@ class LogicCondition extends Condition {
 	}
 	toString() {
 		return this.conds.map((c) => `(${c.toString()})`).join(` ${this.op} `);
+	}
+}
+
+class InsertQuery {
+	constructor(table) {
+		this.table = table;
+		this._values = {};
+	}
+	values(vals) {
+		for (const key in vals) {
+			this._values[key] = vals[key];
+		}
+		return this;
+	}
+	toString() {
+		const columns = Object.keys(this._values).join(", ");
+		const values = Object.values(this._values)
+			.map((v) => (typeof v === "string" ? `"${v}"` : v))
+			.join(", ");
+		return `INSERT INTO ${this.table} (${columns}) VALUES (${values})`;
 	}
 }
 
@@ -65,8 +84,11 @@ class Query {
 
 const SQL = {
 	builder: {
-		table(name) {
-			return new Query(name);
+		select(table) {
+			return new Query(table);
+		},
+		insert(table) {
+			return new InsertQuery(table);
 		},
 	},
 	ASC: false,
@@ -93,7 +115,7 @@ const SQL = {
 
 console.log(
 	SQL.builder
-		.table("users")
+		.select("users")
 		.where(
 			SQL.and(
 				SQL.including("name", "john"),
@@ -102,4 +124,8 @@ console.log(
 			)
 		)
 		.order("age", SQL.ASC) + ";"
+);
+
+console.log(
+	SQL.builder.insert("users").values({ name: "jhon doe", age: 25 }) + ";"
 );
