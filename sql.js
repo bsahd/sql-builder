@@ -1,7 +1,7 @@
 function sqlSpecialChars(val) {
-	if (val === null) return 'NULL';
+	if (val === null) return "NULL";
 	if (typeof val === "string") return `'${val.replaceAll("'", "''")}'`;
-	if (typeof val === "boolean") return val ? '1' : '0';
+	if (typeof val === "boolean") return val ? "1" : "0";
 	return val;
 }
 
@@ -37,20 +37,26 @@ class LogicCondition extends Condition {
 class InsertQuery {
 	constructor(table) {
 		this.table = table;
-		this._values = {};
+		this._rows = [];
 	}
 	values(vals) {
-		for (const key in vals) {
-			this._values[key] = vals[key];
-		}
+		this._rows.push(vals);
 		return this;
 	}
 	toString() {
-		const columns = Object.keys(this._values).join(", ");
-		const values = Object.values(this._values)
-			.map((v) => sqlSpecialChars(v))
+		if (this._rows.length === 0) throw new Error("no values specified");
+		const columns = Object.keys(this._rows[0]).join(", ");
+		const values = this._rows
+			.map(
+				(row) =>
+					"(" +
+					Object.values(row)
+						.map((v) => sqlSpecialChars(v))
+						.join(", ") +
+					")"
+			)
 			.join(", ");
-		return `INSERT INTO ${this.table} (${columns}) VALUES (${values})`;
+		return `INSERT INTO ${this.table} (${columns}) VALUES ${values}`;
 	}
 }
 
