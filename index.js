@@ -1,4 +1,3 @@
-import { DatabaseSync } from "node:sqlite";
 function sqlSpecialChars(val) {
 	if (val === null) return "NULL";
 	if (typeof val === "string") return `'${val.replaceAll("'", "''")}'`;
@@ -56,20 +55,20 @@ class InsertQuery {
 	}
 	toString() {
 		if (this._rows.length === 0) throw new Error("no values specified");
-
+		
 		const columns = this._rows
-			.flatMap((a) => Object.keys(a))
-			.filter((e, i, s) => s.indexOf(e) == i);
+		.flatMap((a) => Object.keys(a))
+		.filter((e, i, s) => s.indexOf(e) == i);
 		const values = this._rows
-			.map(
-				(row) =>
-					"(" +
-					columns
-						.map((v) => sqlSpecialChars(v in row ? row[v] : null))
-						.join(", ") +
-					")"
-			)
-			.join(", ");
+		.map(
+			(row) =>
+				"(" +
+			columns
+			.map((v) => sqlSpecialChars(v in row ? row[v] : null))
+			.join(", ") +
+			")"
+		)
+		.join(", ");
 		return `INSERT INTO ${this.table} (${columns.join(", ")}) VALUES ${values}`;
 	}
 }
@@ -102,8 +101,8 @@ class SelectQuery {
 		if (this.whereCond) sql += ` WHERE ${this.whereCond.toString()}`;
 		if (this.orders.length > 0)
 			sql += ` ORDER BY ${this.orders
-				.map((a) => `${a.col} ${a.desc ? "DESC" : "ASC"}`)
-				.join(", ")}`;
+		.map((a) => `${a.col} ${a.desc ? "DESC" : "ASC"}`)
+		.join(", ")}`;
 		return sql;
 	}
 }
@@ -130,35 +129,35 @@ class UpdateQuery {
 		sql += ` SET ${Object.entries(this.sets)
 			.map(([k, v]) => `${k}=${sqlSpecialChars(v)}`)
 			.join(", ")}`;
-		if (this.whereCond) sql += ` WHERE ${this.whereCond.toString()}`;
-		return sql;
-	}
-}
-
-class DeleteQuery {
-	constructor(table) {
-		this.table = table;
-		this.whereCond = null;
-	}
-	where(cond) {
-		if (this.whereCond) {
-			throw new Error("cant define where conditions twice");
+			if (this.whereCond) sql += ` WHERE ${this.whereCond.toString()}`;
+			return sql;
 		}
-		this.whereCond = cond;
-		return this;
 	}
-	toString() {
-		let sql = `DELETE FROM ${this.table}`;
-		if (this.whereCond) sql += ` WHERE ${this.whereCond.toString()}`;
-		return sql;
+	
+	class DeleteQuery {
+		constructor(table) {
+			this.table = table;
+			this.whereCond = null;
+		}
+		where(cond) {
+			if (this.whereCond) {
+				throw new Error("cant define where conditions twice");
+			}
+			this.whereCond = cond;
+			return this;
+		}
+		toString() {
+			let sql = `DELETE FROM ${this.table}`;
+			if (this.whereCond) sql += ` WHERE ${this.whereCond.toString()}`;
+			return sql;
+		}
 	}
-}
-
-const SQL = {
-	builder: {
-		select(table) {
-			return new SelectQuery(table);
-		},
+	
+	const SQL = {
+		builder: {
+			select(table) {
+				return new SelectQuery(table);
+			},
 		insert(table) {
 			return new InsertQuery(table);
 		},
@@ -197,34 +196,3 @@ const SQL = {
 	},
 };
 export default SQL;
-
-if (import.meta.filename === process.argv[1]) {
-	const db = new DatabaseSync(":memory:");
-	db.exec("CREATE TABLE users(name VARCHAR, age INTEGER)");
-
-	db.exec(
-		SQL.builder
-			.insert("users")
-			.values({ name: "john' doe", age: 25 })
-			.values({ name: "alice", age: 29 })
-			.values({ name: "bob", age: 31 })
-			.toString()
-	);
-	console.log(db.prepare(SQL.builder.select("users").toString()).all());
-	db.exec(
-		SQL.builder
-			.update("users")
-			.set("name", "charry")
-			.set("age", 26)
-			.where(SQL.and(SQL.eq("name", "alice"), SQL.eq("age", 29)))
-			.toString()
-	);
-	console.log(db.prepare(SQL.builder.select("users").toString()).all());
-	db.exec(
-		SQL.builder
-			.delete("users")
-			.where(SQL.and(SQL.eq("name", "john' doe"), SQL.eq("age", 25)))
-			.toString()
-	);
-	console.log(db.prepare(SQL.builder.select("users").toString()).all());
-}
