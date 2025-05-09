@@ -1,3 +1,7 @@
+function sqlSpecialChars(val) {
+	return typeof val === "string" ? `'${val.replaceAll("'", "''")}'` : val;
+}
+
 class Condition {
 	toString() {
 		throw new Error("実装してね");
@@ -12,8 +16,7 @@ class BinaryCondition extends Condition {
 		this.val = val;
 	}
 	toString() {
-		const v = typeof this.val === "string" ? `"${this.val}"` : this.val;
-		return `${this.col} ${this.op} ${v}`;
+		return `${this.col} ${this.op} ${sqlSpecialChars(this.val)}`;
 	}
 }
 
@@ -42,7 +45,7 @@ class InsertQuery {
 	toString() {
 		const columns = Object.keys(this._values).join(", ");
 		const values = Object.values(this._values)
-			.map((v) => (typeof v === "string" ? `"${v}"` : v))
+			.map((v) => sqlSpecialChars(v))
 			.join(", ");
 		return `INSERT INTO ${this.table} (${columns}) VALUES (${values})`;
 	}
@@ -118,7 +121,7 @@ console.log(
 		.select("users")
 		.where(
 			SQL.and(
-				SQL.including("name", "john"),
+				SQL.including("name", "john' doe"),
 				SQL.gte("age", 20),
 				SQL.lte("age", 30)
 			)
@@ -127,5 +130,5 @@ console.log(
 );
 
 console.log(
-	SQL.builder.insert("users").values({ name: "jhon doe", age: 25 }) + ";"
+	SQL.builder.insert("users").values({ name: "jhon' doe", age: 25 }) + ";"
 );
