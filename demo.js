@@ -1,3 +1,4 @@
+//@ts-check
 import SQL from "./index.js";
 import { DatabaseSync } from "node:sqlite";
 const dbsq = new DatabaseSync(":memory:");

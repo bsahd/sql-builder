@@ -1,3 +1,7 @@
+//@ts-check
+/**
+ * @param {string | null | boolean | number} val
+ */
 function sqlSpecialChars(val) {
 	if (val === null) return "NULL";
 	if (typeof val === "string") return `'${val.replaceAll("'", "''")}'`;
@@ -6,12 +10,18 @@ function sqlSpecialChars(val) {
 }
 
 class Condition {
+	/**
+	 * @returns {string}
+	 */
 	toString() {
 		throw new Error("実装してね");
 	}
 }
 
 class NotCondition extends Condition {
+	/**
+	 * @param {Condition} cond
+	 */
 	constructor(cond) {
 		super();
 		this.cond = cond;
@@ -22,6 +32,11 @@ class NotCondition extends Condition {
 }
 
 class BinaryCondition extends Condition {
+	/**
+	 * @param {string} col
+	 * @param {string} op
+	 * @param {string | null | boolean | number} val
+	 */
 	constructor(col, op, val) {
 		super();
 		this.col = col;
@@ -34,6 +49,10 @@ class BinaryCondition extends Condition {
 }
 
 class LogicCondition extends Condition {
+	/**
+	 * @param {string} op
+	 * @param {Condition[]} conds
+	 */
 	constructor(op, conds) {
 		super();
 		this.op = op;
@@ -45,22 +64,33 @@ class LogicCondition extends Condition {
 }
 
 class Query {
+	/**
+	 * @param {string} table
+	 * @param {(sql:string)=>any} [executor]
+	 */
 	constructor(table, executor) {
 		this.table = table;
 		this.executor = executor;
 	}
+	/**
+	 * @returns {string}
+	 */
 	toString() {
 		throw new Error("実装してね");
 	}
 	run() {
 		if (typeof this.executor != "function") {
-			throw new Error("executor is must function");
+			throw new Error("executor is not defined");
 		}
 		return this.executor(this.toString());
 	}
 }
 
 class InsertQuery extends Query {
+	/**
+	 * @param {string} table
+	 * @param {((sql: string) => any)} [executor]
+	 */
 	constructor(table, executor) {
 		super(table, executor);
 		this._rows = [];
@@ -90,11 +120,18 @@ class InsertQuery extends Query {
 }
 
 class SelectQuery extends Query {
+	/**
+	 * @param {string} table
+	 * @param {((sql: string) => any) | undefined} [executor]
+	 */
 	constructor(table, executor) {
 		super(table, executor);
 		this.whereCond = null;
 		this.orders = [];
 	}
+	/**
+	 * @param {Condition} cond
+	 */
 	where(cond) {
 		if (this.whereCond) {
 			throw new Error("cant define where conditions twice");
@@ -102,6 +139,10 @@ class SelectQuery extends Query {
 		this.whereCond = cond;
 		return this;
 	}
+	/**
+	 * @param {string} col
+	 * @param {boolean} desc
+	 */
 	order(col, desc) {
 		if (typeof col == "undefined" || typeof desc == "undefined") {
 			throw new Error("please specify col and asc/desc");
@@ -124,15 +165,26 @@ class SelectQuery extends Query {
 }
 
 class UpdateQuery extends Query {
+	/**
+	 * @param {string} table
+	 * @param {((sql: string) => any) | undefined} [executor]
+	 */
 	constructor(table, executor) {
 		super(table, executor);
 		this.whereCond = null;
 		this.sets = {};
 	}
+	/**
+	 * @param {string} col
+	 * @param {string | number|boolean|null} val
+	 */
 	set(col, val) {
 		this.sets[col] = val;
 		return this;
 	}
+	/**
+	 * @param {Condition} cond
+	 */
 	where(cond) {
 		if (this.whereCond) {
 			throw new Error("cant define where conditions twice");
@@ -151,10 +203,17 @@ class UpdateQuery extends Query {
 }
 
 class DeleteQuery extends Query {
+	/**
+	 * @param {string} table
+	 * @param {((sql: string) => any) | undefined} [executor]
+	 */
 	constructor(table, executor) {
 		super(table, executor);
 		this.whereCond = null;
 	}
+	/**
+	 * @param {Condition} cond
+	 */
 	where(cond) {
 		if (this.whereCond) {
 			throw new Error("cant define where conditions twice");
@@ -171,60 +230,121 @@ class DeleteQuery extends Query {
 
 class SQL {
 	static builder = {
+		/**
+		 * @param {string} table
+		 */
 		select(table) {
 			return new SelectQuery(table);
 		},
+		/**
+		 * @param {string} table
+		 */
 		insert(table) {
 			return new InsertQuery(table);
 		},
+		/**
+		 * @param {string} table
+		 */
 		delete(table) {
 			return new DeleteQuery(table);
 		},
+		/**
+		 * @param {string} table
+		 */
 		update(table) {
 			return new UpdateQuery(table);
 		},
 	};
 	static ASC = false;
 	static DESC = true;
+	/**
+	 * @param {string} col
+	 * @param {string | number | boolean} val
+	 */
 	static eq(col, val) {
 		return new BinaryCondition(col, "=", val);
 	}
+	/**
+	 * @param {string} col
+	 * @param {string | number | boolean} val
+	 */
 	static neq(col, val) {
 		return new BinaryCondition(col, "!=", val);
 	}
+	/**
+	 * @param {string} col
+	 * @param {string | number | boolean} val
+	 */
 	static gte(col, val) {
 		return new BinaryCondition(col, ">=", val);
 	}
+	/**
+	 * @param {string} col
+	 * @param {string | number | boolean} val
+	 */
 	static lte(col, val) {
 		return new BinaryCondition(col, "<=", val);
 	}
+	/**
+	 * @param {string} col
+	 * @param {string} v
+	 */
 	static including(col, v) {
 		return new BinaryCondition(col, "LIKE", `%${v}%`);
 	}
+	/**
+	 * @param {Condition[]} conds
+	 */
 	static and(...conds) {
 		return new LogicCondition("AND", conds);
 	}
+	/**
+	 * @param {Condition[]} conds
+	 */
 	static or(...conds) {
 		return new LogicCondition("OR", conds);
 	}
+	/**
+	 * @param {Condition} cond
+	 */
 	static not(cond) {
 		return new NotCondition(cond);
 	}
+	/**
+	 * @param {string} table
+	 */
 	select(table) {
 		return new SelectQuery(table, this.selectExecutor);
 	}
+	/**
+	 * @param {string} table
+	 */
 	insert(table) {
 		return new InsertQuery(table, this.executor);
 	}
+	/**
+	 * @param {string} table
+	 */
 	delete(table) {
 		return new DeleteQuery(table, this.executor);
 	}
+	/**
+	 * @param {string} table
+	 */
 	update(table) {
 		return new UpdateQuery(table, this.executor);
 	}
+	/**
+	 * @param {string} sql
+	 */
 	run(sql) {
 		return this.executor(sql);
 	}
+	/**
+	 *
+	 * @param {(sql:string)=>any} executor
+	 * @param {(sql:string)=>any} selectExecutor
+	 */
 	constructor(executor, selectExecutor) {
 		this.executor = executor;
 		this.selectExecutor = selectExecutor;
