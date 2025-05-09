@@ -44,9 +44,25 @@ class LogicCondition extends Condition {
 	}
 }
 
-class InsertQuery {
-	constructor(table) {
+class Query {
+	constructor(table, executor) {
 		this.table = table;
+		this.executor = executor;
+	}
+	toString() {
+		throw new Error("実装してね");
+	}
+	run() {
+		if (typeof this.executor != "function") {
+			throw new Error("executor is must function");
+		}
+		return this.executor(this.toString());
+	}
+}
+
+class InsertQuery extends Query {
+	constructor(table, executor) {
+		super(table, executor);
 		this._rows = [];
 	}
 	values(vals) {
@@ -55,27 +71,27 @@ class InsertQuery {
 	}
 	toString() {
 		if (this._rows.length === 0) throw new Error("no values specified");
-		
+
 		const columns = this._rows
-		.flatMap((a) => Object.keys(a))
-		.filter((e, i, s) => s.indexOf(e) == i);
+			.flatMap((a) => Object.keys(a))
+			.filter((e, i, s) => s.indexOf(e) == i);
 		const values = this._rows
-		.map(
-			(row) =>
-				"(" +
-			columns
-			.map((v) => sqlSpecialChars(v in row ? row[v] : null))
-			.join(", ") +
-			")"
-		)
-		.join(", ");
+			.map(
+				(row) =>
+					"(" +
+					columns
+						.map((v) => sqlSpecialChars(v in row ? row[v] : null))
+						.join(", ") +
+					")"
+			)
+			.join(", ");
 		return `INSERT INTO ${this.table} (${columns.join(", ")}) VALUES ${values}`;
 	}
 }
 
-class SelectQuery {
-	constructor(table) {
-		this.table = table;
+class SelectQuery extends Query {
+	constructor(table, executor) {
+		super(table, executor);
 		this.whereCond = null;
 		this.orders = [];
 	}
@@ -101,15 +117,15 @@ class SelectQuery {
 		if (this.whereCond) sql += ` WHERE ${this.whereCond.toString()}`;
 		if (this.orders.length > 0)
 			sql += ` ORDER BY ${this.orders
-		.map((a) => `${a.col} ${a.desc ? "DESC" : "ASC"}`)
-		.join(", ")}`;
+				.map((a) => `${a.col} ${a.desc ? "DESC" : "ASC"}`)
+				.join(", ")}`;
 		return sql;
 	}
 }
 
-class UpdateQuery {
-	constructor(table) {
-		this.table = table;
+class UpdateQuery extends Query {
+	constructor(table, executor) {
+		super(table, executor);
 		this.whereCond = null;
 		this.sets = {};
 	}
@@ -129,35 +145,35 @@ class UpdateQuery {
 		sql += ` SET ${Object.entries(this.sets)
 			.map(([k, v]) => `${k}=${sqlSpecialChars(v)}`)
 			.join(", ")}`;
-			if (this.whereCond) sql += ` WHERE ${this.whereCond.toString()}`;
-			return sql;
-		}
+		if (this.whereCond) sql += ` WHERE ${this.whereCond.toString()}`;
+		return sql;
 	}
-	
-	class DeleteQuery {
-		constructor(table) {
-			this.table = table;
-			this.whereCond = null;
-		}
-		where(cond) {
-			if (this.whereCond) {
-				throw new Error("cant define where conditions twice");
-			}
-			this.whereCond = cond;
-			return this;
-		}
-		toString() {
-			let sql = `DELETE FROM ${this.table}`;
-			if (this.whereCond) sql += ` WHERE ${this.whereCond.toString()}`;
-			return sql;
-		}
+}
+
+class DeleteQuery extends Query {
+	constructor(table, executor) {
+		super(table, executor);
+		this.whereCond = null;
 	}
-	
-	const SQL = {
-		builder: {
-			select(table) {
-				return new SelectQuery(table);
-			},
+	where(cond) {
+		if (this.whereCond) {
+			throw new Error("cant define where conditions twice");
+		}
+		this.whereCond = cond;
+		return this;
+	}
+	toString() {
+		let sql = `DELETE FROM ${this.table}`;
+		if (this.whereCond) sql += ` WHERE ${this.whereCond.toString()}`;
+		return sql;
+	}
+}
+
+class SQL {
+	static builder = {
+		select(table) {
+			return new SelectQuery(table);
+		},
 		insert(table) {
 			return new InsertQuery(table);
 		},
@@ -167,32 +183,51 @@ class UpdateQuery {
 		update(table) {
 			return new UpdateQuery(table);
 		},
-	},
-	ASC: false,
-	DESC: true,
-	eq(col, val) {
+	};
+	static ASC = false;
+	static DESC = true;
+	static eq(col, val) {
 		return new BinaryCondition(col, "=", val);
-	},
-	neq(col, val) {
+	}
+	static neq(col, val) {
 		return new BinaryCondition(col, "!=", val);
-	},
-	gte(col, val) {
+	}
+	static gte(col, val) {
 		return new BinaryCondition(col, ">=", val);
-	},
-	lte(col, val) {
+	}
+	static lte(col, val) {
 		return new BinaryCondition(col, "<=", val);
-	},
-	including(col, v) {
+	}
+	static including(col, v) {
 		return new BinaryCondition(col, "LIKE", `%${v}%`);
-	},
-	and(...conds) {
+	}
+	static and(...conds) {
 		return new LogicCondition("AND", conds);
-	},
-	or(...conds) {
+	}
+	static or(...conds) {
 		return new LogicCondition("OR", conds);
-	},
-	not(cond) {
+	}
+	static not(cond) {
 		return new NotCondition(cond);
-	},
-};
+	}
+	select(table) {
+		return new SelectQuery(table, this.selectExecutor);
+	}
+	insert(table) {
+		return new InsertQuery(table, this.executor);
+	}
+	delete(table) {
+		return new DeleteQuery(table, this.executor);
+	}
+	update(table) {
+		return new UpdateQuery(table, this.executor);
+	}
+	run(sql) {
+		return this.executor(sql);
+	}
+	constructor(executor, selectExecutor) {
+		this.executor = executor;
+		this.selectExecutor = selectExecutor;
+	}
+}
 export default SQL;
