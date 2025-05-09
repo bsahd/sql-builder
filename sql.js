@@ -60,7 +60,7 @@ class InsertQuery {
 	}
 }
 
-class Query {
+class SelectQuery {
 	constructor(table) {
 		this.table = table;
 		this.whereCond = null;
@@ -97,7 +97,7 @@ class Query {
 const SQL = {
 	builder: {
 		select(table) {
-			return new Query(table);
+			return new SelectQuery(table);
 		},
 		insert(table) {
 			return new InsertQuery(table);
@@ -139,5 +139,9 @@ console.log(
 );
 
 console.log(
-	SQL.builder.insert("users").values({ name: "jhon' doe", age: 25 }) + ";"
+	SQL.builder
+		.insert("users")
+		.values({ name: "jhon' doe", age: 25 })
+		.values({ name: "alice", age: 29 })
+		.values({ name: "bob", age: 31 }) + ";"
 );
