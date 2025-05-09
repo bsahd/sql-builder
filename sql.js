@@ -45,18 +45,21 @@ class InsertQuery {
 	}
 	toString() {
 		if (this._rows.length === 0) throw new Error("no values specified");
-		const columns = Object.keys(this._rows[0]).join(", ");
+
+		const columns = this._rows
+			.flatMap((a) => Object.keys(a))
+			.filter((e, i, s) => s.indexOf(e) == i);
 		const values = this._rows
 			.map(
 				(row) =>
 					"(" +
-					Object.values(row)
-						.map((v) => sqlSpecialChars(v))
+					columns
+						.map((v) => sqlSpecialChars(v in row ? row[v] : null))
 						.join(", ") +
 					")"
 			)
 			.join(", ");
-		return `INSERT INTO ${this.table} (${columns}) VALUES ${values}`;
+		return `INSERT INTO ${this.table} (${columns.join(", ")}) VALUES ${values}`;
 	}
 }
 
@@ -94,6 +97,25 @@ class SelectQuery {
 	}
 }
 
+class DeleteQuery {
+	constructor(table) {
+		this.table = table;
+		this.whereCond = null;
+	}
+	where(cond) {
+		if (this.whereCond) {
+			throw new Error("cant define where conditions twice");
+		}
+		this.whereCond = cond;
+		return this;
+	}
+	toString() {
+		let sql = `DELETE FROM ${this.table}`;
+		if (this.whereCond) sql += ` WHERE ${this.whereCond.toString()}`;
+		return sql;
+	}
+}
+
 const SQL = {
 	builder: {
 		select(table) {
@@ -101,6 +123,9 @@ const SQL = {
 		},
 		insert(table) {
 			return new InsertQuery(table);
+		},
+		delete(table) {
+			return new DeleteQuery(table);
 		},
 	},
 	ASC: false,
@@ -143,5 +168,10 @@ console.log(
 		.insert("users")
 		.values({ name: "jhon' doe", age: 25 })
 		.values({ name: "alice", age: 29 })
-		.values({ name: "bob", age: 31 }) + ";"
+		.values({ name: "bob", age: 31, su: true }) + ";"
+);
+console.log(
+	SQL.builder
+		.delete("users")
+		.where(SQL.and(SQL.eq("name", "john' doe"), SQL.eq("age", 25))) + ";"
 );
