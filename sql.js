@@ -1,5 +1,8 @@
 function sqlSpecialChars(val) {
-	return typeof val === "string" ? `'${val.replaceAll("'", "''")}'` : val;
+	if (val === null) return 'NULL';
+	if (typeof val === "string") return `'${val.replaceAll("'", "''")}'`;
+	if (typeof val === "boolean") return val ? '1' : '0';
+	return val;
 }
 
 class Condition {
