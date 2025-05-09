@@ -116,9 +116,9 @@ class UpdateQuery {
 	}
 	toString() {
 		let sql = `UPDATE ${this.table}`;
-		sql += ` SET ${Object.entries(this.sets).map(
-			([k, v]) => `${k}=${sqlSpecialChars(v)}`
-		)}`;
+		sql += ` SET ${Object.entries(this.sets)
+			.map(([k, v]) => `${k}=${sqlSpecialChars(v)}`)
+			.join(", ")}`;
 		if (this.whereCond) sql += ` WHERE ${this.whereCond.toString()}`;
 		return sql;
 	}
