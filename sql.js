@@ -97,6 +97,33 @@ class SelectQuery {
 	}
 }
 
+class UpdateQuery {
+	constructor(table) {
+		this.table = table;
+		this.whereCond = null;
+		this.sets = {};
+	}
+	set(col, val) {
+		this.sets[col] = val;
+		return this;
+	}
+	where(cond) {
+		if (this.whereCond) {
+			throw new Error("cant define where conditions twice");
+		}
+		this.whereCond = cond;
+		return this;
+	}
+	toString() {
+		let sql = `UPDATE ${this.table}`;
+		sql += ` SET ${Object.entries(this.sets).map(
+			([k, v]) => `${k}=${sqlSpecialChars(v)}`
+		)}`;
+		if (this.whereCond) sql += ` WHERE ${this.whereCond.toString()}`;
+		return sql;
+	}
+}
+
 class DeleteQuery {
 	constructor(table) {
 		this.table = table;
@@ -126,6 +153,9 @@ const SQL = {
 		},
 		delete(table) {
 			return new DeleteQuery(table);
+		},
+		update(table) {
+			return new UpdateQuery(table);
 		},
 	},
 	ASC: false,
@@ -173,5 +203,12 @@ console.log(
 console.log(
 	SQL.builder
 		.delete("users")
+		.where(SQL.and(SQL.eq("name", "john' doe"), SQL.eq("age", 25))) + ";"
+);
+console.log(
+	SQL.builder
+		.update("users")
+		.set("name", "jhon doe")
+		.set("age", 26)
 		.where(SQL.and(SQL.eq("name", "john' doe"), SQL.eq("age", 25))) + ";"
 );
