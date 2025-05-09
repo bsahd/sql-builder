@@ -1,3 +1,4 @@
+import { DatabaseSync } from "node:sqlite";
 function sqlSpecialChars(val) {
 	if (val === null) return "NULL";
 	if (typeof val === "string") return `'${val.replaceAll("'", "''")}'`;
@@ -193,35 +194,33 @@ const SQL = {
 	},
 };
 
-console.log(
-	SQL.builder
-		.select("users")
-		.where(
-			SQL.and(
-				SQL.including("name", "john' doe"),
-				SQL.gte("age", 20),
-				SQL.lte("age", 30)
-			)
-		)
-		.order("age", SQL.ASC) + ";"
-);
+if (import.meta.filename === process.argv[1]) {
+	const db = new DatabaseSync(":memory:");
+	db.exec("CREATE TABLE users(name VARCHAR, age INTEGER)");
 
-console.log(
-	SQL.builder
-		.insert("users")
-		.values({ name: "jhon' doe", age: 25 })
-		.values({ name: "alice", age: 29 })
-		.values({ name: "bob", age: 31, su: true }) + ";"
-);
-console.log(
-	SQL.builder
-		.delete("users")
-		.where(SQL.and(SQL.eq("name", "john' doe"), SQL.eq("age", 25))) + ";"
-);
-console.log(
-	SQL.builder
-		.update("users")
-		.set("name", "jhon doe")
-		.set("age", 26)
-		.where(SQL.and(SQL.eq("name", "john' doe"), SQL.eq("age", 25))) + ";"
-);
+	db.exec(
+		SQL.builder
+			.insert("users")
+			.values({ name: "john' doe", age: 25 })
+			.values({ name: "alice", age: 29 })
+			.values({ name: "bob", age: 31 })
+			.toString()
+	);
+	console.log(db.prepare(SQL.builder.select("users").toString()).all());
+	db.exec(
+		SQL.builder
+			.update("users")
+			.set("name", "charry")
+			.set("age", 26)
+			.where(SQL.and(SQL.eq("name", "alice"), SQL.eq("age", 29)))
+			.toString()
+	);
+	console.log(db.prepare(SQL.builder.select("users").toString()).all());
+	db.exec(
+		SQL.builder
+			.delete("users")
+			.where(SQL.and(SQL.eq("name", "john' doe"), SQL.eq("age", 25)))
+			.toString()
+	);
+	console.log(db.prepare(SQL.builder.select("users").toString()).all());
+}
