@@ -1,0 +1,21 @@
+{
+	"name": "@bsahd/sql-builder",
+	"version": "0.1.0",
+	"description": "A simple tool for building safe and readable SQL Querys",
+	"homepage": "https://github.com/bsahd/sql-builder#readme",
+	"bugs": {
+		"url": "https://github.com/bsahd/sql-builder/issues"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/bsahd/sql-builder.git"
+	},
+	"license": "MIT",
+	"author": "bsahd",
+	"type": "module",
+	"main": "index.js",
+	"publishConfig": {
+		"registry": "https://npm.pkg.github.com",
+		"access": "public"
+	}
+}
