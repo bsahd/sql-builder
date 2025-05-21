@@ -319,6 +319,18 @@ class SQL {
 	}
 	/**
 	 * @param {string} col
+	 */
+	static isNull(col) {
+		return new BinaryCondition(col, "IS", null);
+	}
+	/**
+	 * @param {string} col
+	 */
+	static isNotNull(col) {
+		return new BinaryCondition(col, "IS NOT", null);
+	}
+	/**
+	 * @param {string} col
 	 * @param {string} v
 	 */
 	static including(col, v) {
