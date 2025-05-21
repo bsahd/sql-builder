@@ -154,7 +154,7 @@ class SelectQuery extends Query {
 	}
 	/**
 	 * @param {string} col
-	 * @param {boolean} desc
+	 * @param {{_SQLSortDirection_:"ASC"|"DESC"}} desc
 	 */
 	order(col, desc) {
 		if (typeof col == "undefined" || typeof desc == "undefined") {
@@ -162,7 +162,7 @@ class SelectQuery extends Query {
 		}
 		this.orders.push({
 			col,
-			desc,
+			desc: desc._SQLSortDirection_,
 		});
 		return this;
 	}
@@ -179,7 +179,7 @@ class SelectQuery extends Query {
 			sql += ` WHERE ${SQL.and(...this.whereCond).toString()}`;
 		if (this.orders.length > 0)
 			sql += ` ORDER BY ${this.orders
-				.map((a) => `${a.col} ${a.desc ? "DESC" : "ASC"}`)
+				.map((a) => `${a.col} ${a.desc}`)
 				.join(", ")}`;
 		if (this.limitNum != 0) sql += ` LIMIT ${this.limitNum}`;
 		return sql;
@@ -285,8 +285,10 @@ class SQL {
 			return new UpdateQuery(table);
 		},
 	};
-	static ASC = false;
-	static DESC = true;
+	/** @type {{ _SQLSortDirection_: "ASC" }} */
+	static ASC = { _SQLSortDirection_: "ASC" };
+	/** @type {{ _SQLSortDirection_: "DESC" }} */
+	static DESC = { _SQLSortDirection_: "DESC" };
 	/**
 	 * @param {string} col
 	 * @param {string | number | boolean} val

@@ -24,5 +24,5 @@ db.delete("users")
 	.where(SQL.eq("name", "john' doe"))
 	.where(SQL.eq("age", 25))
 	.run();
-console.log(db.select("users").limit(1).run().all());
+console.log(db.select("users").limit(1).order("name",SQL.DESC).run().all());
 console.log(db.select("users").run().all());
