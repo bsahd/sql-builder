@@ -3,7 +3,7 @@
  * @param {string | null | boolean | number} val
  */
 function sqlSpecialChars(val) {
-	if (val === null) return "NULL";
+	if (typeof val === "undefined" || val === null) return "NULL";
 	if (typeof val === "string") return `'${val.replaceAll("'", "''")}'`;
 	if (typeof val === "boolean") return val ? "1" : "0";
 	return val;
