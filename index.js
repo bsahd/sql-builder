@@ -141,17 +141,15 @@ class SelectQuery extends Query {
 	 */
 	constructor(table, executor) {
 		super(table, executor);
-		this.whereCond = null;
+		this.whereCond = [];
 		this.orders = [];
+		this.limitNum = 0;
 	}
 	/**
 	 * @param {Condition} cond
 	 */
 	where(cond) {
-		if (this.whereCond) {
-			throw new Error("cant define where conditions twice");
-		}
-		this.whereCond = cond;
+		this.whereCond.push(cond);
 		return this;
 	}
 	/**
@@ -168,13 +166,22 @@ class SelectQuery extends Query {
 		});
 		return this;
 	}
+	/**
+	 * @param {number} num
+	 */
+	limit(num) {
+		this.limitNum = num;
+		return this;
+	}
 	toString() {
 		let sql = `SELECT * FROM ${this.table}`;
-		if (this.whereCond) sql += ` WHERE ${this.whereCond.toString()}`;
+		if (this.whereCond.length)
+			sql += ` WHERE ${SQL.and(...this.whereCond).toString()}`;
 		if (this.orders.length > 0)
 			sql += ` ORDER BY ${this.orders
 				.map((a) => `${a.col} ${a.desc ? "DESC" : "ASC"}`)
 				.join(", ")}`;
+		if (this.limitNum != 0) sql += ` LIMIT ${this.limit}`;
 		return sql;
 	}
 }
@@ -190,7 +197,7 @@ class UpdateQuery extends Query {
 	 */
 	constructor(table, executor) {
 		super(table, executor);
-		this.whereCond = null;
+		this.whereCond = [];
 		this.sets = {};
 	}
 	/**
@@ -205,10 +212,7 @@ class UpdateQuery extends Query {
 	 * @param {Condition} cond
 	 */
 	where(cond) {
-		if (this.whereCond) {
-			throw new Error("cant define where conditions twice");
-		}
-		this.whereCond = cond;
+		this.whereCond.push(cond);
 		return this;
 	}
 	toString() {
@@ -216,7 +220,8 @@ class UpdateQuery extends Query {
 		sql += ` SET ${Object.entries(this.sets)
 			.map(([k, v]) => `${k}=${sqlSpecialChars(v)}`)
 			.join(", ")}`;
-		if (this.whereCond) sql += ` WHERE ${this.whereCond.toString()}`;
+		if (this.whereCond.length)
+			sql += ` WHERE ${SQL.and(...this.whereCond).toString()}`;
 		return sql;
 	}
 }
@@ -232,21 +237,19 @@ class DeleteQuery extends Query {
 	 */
 	constructor(table, executor) {
 		super(table, executor);
-		this.whereCond = null;
+		this.whereCond = [];
 	}
 	/**
 	 * @param {Condition} cond
 	 */
 	where(cond) {
-		if (this.whereCond) {
-			throw new Error("cant define where conditions twice");
-		}
-		this.whereCond = cond;
+		this.whereCond.push(cond);
 		return this;
 	}
 	toString() {
 		let sql = `DELETE FROM ${this.table}`;
-		if (this.whereCond) sql += ` WHERE ${this.whereCond.toString()}`;
+		if (this.whereCond.length)
+			sql += ` WHERE ${SQL.and(...this.whereCond).toString()}`;
 		return sql;
 	}
 }
