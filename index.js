@@ -181,7 +181,7 @@ class SelectQuery extends Query {
 			sql += ` ORDER BY ${this.orders
 				.map((a) => `${a.col} ${a.desc ? "DESC" : "ASC"}`)
 				.join(", ")}`;
-		if (this.limitNum != 0) sql += ` LIMIT ${this.limit}`;
+		if (this.limitNum != 0) sql += ` LIMIT ${this.limitNum}`;
 		return sql;
 	}
 }
