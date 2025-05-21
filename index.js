@@ -63,10 +63,13 @@ class LogicCondition extends Condition {
 	}
 }
 
+/**
+ * @template T
+ */
 class Query {
 	/**
 	 * @param {string} table
-	 * @param {(sql:string)=>any} [executor]
+	 * @param {(sql:string)=>T} [executor]
 	 */
 	constructor(table, executor) {
 		this.table = table;
@@ -86,10 +89,14 @@ class Query {
 	}
 }
 
+/**
+ * @template T
+ * @extends {Query<T>}
+ */
 class InsertQuery extends Query {
 	/**
 	 * @param {string} table
-	 * @param {((sql: string) => any)} [executor]
+	 * @param {(sql: string) => T} [executor]
 	 */
 	constructor(table, executor) {
 		super(table, executor);
@@ -123,10 +130,14 @@ class InsertQuery extends Query {
 	}
 }
 
+/**
+ * @template T
+ * @extends {Query<T>}
+ */
 class SelectQuery extends Query {
 	/**
 	 * @param {string} table
-	 * @param {((sql: string) => any) | undefined} [executor]
+	 * @param {(sql: string) => T} [executor]
 	 */
 	constructor(table, executor) {
 		super(table, executor);
@@ -168,10 +179,14 @@ class SelectQuery extends Query {
 	}
 }
 
+/**
+ * @template T
+ * @extends {Query<T>}
+ */
 class UpdateQuery extends Query {
 	/**
 	 * @param {string} table
-	 * @param {((sql: string) => any) | undefined} [executor]
+	 * @param {(sql: string) => T} [executor]
 	 */
 	constructor(table, executor) {
 		super(table, executor);
@@ -206,10 +221,14 @@ class UpdateQuery extends Query {
 	}
 }
 
+/**
+ * @template T
+ * @extends {Query<T>}
+ */
 class DeleteQuery extends Query {
 	/**
 	 * @param {string} table
-	 * @param {((sql: string) => any) | undefined} [executor]
+	 * @param {(sql: string) => T} [executor]
 	 */
 	constructor(table, executor) {
 		super(table, executor);
@@ -232,6 +251,10 @@ class DeleteQuery extends Query {
 	}
 }
 
+/**
+ * @template ExecT
+ * @template QueryT
+ */
 class SQL {
 	static builder = {
 		/**
@@ -346,8 +369,8 @@ class SQL {
 	}
 	/**
 	 *
-	 * @param {(sql:string)=>any} executor
-	 * @param {(sql:string)=>any} selectExecutor
+	 * @param {(sql:string)=>ExecT} executor
+	 * @param {(sql:string)=>QueryT} selectExecutor
 	 */
 	constructor(executor, selectExecutor) {
 		this.executor = executor;
