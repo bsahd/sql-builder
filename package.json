@@ -1,6 +1,6 @@
 {
 	"name": "@bsahd/sql-builder",
-	"version": "1.1.0",
+	"version": "1.1.1",
 	"description": "A simple tool for building safe and readable SQL Querys",
 	"homepage": "https://github.com/bsahd/sql-builder#readme",
 	"bugs": {
