@@ -26,6 +26,9 @@ class NotCondition extends Condition {
 		super();
 		this.cond = cond;
 	}
+	/**
+	 * @override
+	 */
 	toString() {
 		return `NOT (${this.cond.toString()})`; // 常に括弧つけるのが無難
 	}
@@ -43,6 +46,9 @@ class BinaryCondition extends Condition {
 		this.op = op;
 		this.val = val;
 	}
+	/**
+	 * @override
+	 */
 	toString() {
 		return `${this.col} ${this.op} ${sqlSpecialChars(this.val)}`;
 	}
@@ -58,6 +64,9 @@ class LogicCondition extends Condition {
 		this.op = op;
 		this.conds = conds;
 	}
+	/**
+	 * @override
+	 */
 	toString() {
 		return this.conds.map((c) => `(${c.toString()})`).join(` ${this.op} `);
 	}
@@ -100,6 +109,7 @@ class InsertQuery extends Query {
 	 */
 	constructor(table, executor) {
 		super(table, executor);
+		/** @type {{[x in string]:(string|boolean|number|null)}[]} */
 		this._rows = [];
 	}
 	/**
@@ -110,6 +120,9 @@ class InsertQuery extends Query {
 		this._rows.push(vals);
 		return this;
 	}
+	/**
+	 * @override
+	 */
 	toString() {
 		if (this._rows.length === 0) throw new Error("no values specified");
 
@@ -141,7 +154,9 @@ class SelectQuery extends Query {
 	 */
 	constructor(table, executor) {
 		super(table, executor);
+		/** @type {Condition[]} */
 		this.whereCond = [];
+		/** @type {{col:string,desc:"ASC"|"DESC"}[]} */
 		this.orders = [];
 		this.limitNum = 0;
 	}
@@ -173,6 +188,9 @@ class SelectQuery extends Query {
 		this.limitNum = num;
 		return this;
 	}
+	/**
+	 * @override
+	 */
 	toString() {
 		let sql = `SELECT * FROM ${this.table}`;
 		if (this.whereCond.length)
@@ -197,7 +215,9 @@ class UpdateQuery extends Query {
 	 */
 	constructor(table, executor) {
 		super(table, executor);
+		/** @type {Condition[]} */
 		this.whereCond = [];
+		/** @type {{[x in string]:string|number|boolean|null}} */
 		this.sets = {};
 	}
 	/**
@@ -215,6 +235,9 @@ class UpdateQuery extends Query {
 		this.whereCond.push(cond);
 		return this;
 	}
+	/**
+	 * @override
+	 */
 	toString() {
 		let sql = `UPDATE ${this.table}`;
 		sql += ` SET ${Object.entries(this.sets)
@@ -237,6 +260,7 @@ class DeleteQuery extends Query {
 	 */
 	constructor(table, executor) {
 		super(table, executor);
+		/** @type {Condition[]} */
 		this.whereCond = [];
 	}
 	/**
@@ -246,6 +270,9 @@ class DeleteQuery extends Query {
 		this.whereCond.push(cond);
 		return this;
 	}
+	/**
+	 * @override
+	 */
 	toString() {
 		let sql = `DELETE FROM ${this.table}`;
 		if (this.whereCond.length)
